@@ -17,10 +17,12 @@ public class Config {
 
     private final Map<Class<?>, Class<?>> interfaceToImplementationMap;
     private final Reflections reflections;
+    private String basePackageName;
 
-    public Config() {
+    public Config(String basePackageName) {
         this.interfaceToImplementationMap = new JsonToMapReader().readJsonToMap("config.json");
-        this.reflections = new Reflections("com.epam");
+        this.basePackageName=basePackageName;
+        this.reflections = new Reflections(basePackageName);
     }
 
     @SuppressWarnings("unchecked")
@@ -47,6 +49,14 @@ public class Config {
     public <T> List<Class<? extends T>> getImplementations(Class<T> interfaceType) {
         Set<Class<? extends T>> classes = reflections.getSubTypesOf(interfaceType);
         return new ArrayList<>(classes);
+    }
+
+    public void setBasePackageName(String basePackageName) {
+        this.basePackageName = basePackageName;
+    }
+
+    public String getBasePackageName() {
+        return basePackageName;
     }
 }
 

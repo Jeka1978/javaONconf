@@ -1,7 +1,9 @@
 package com.epam.javaonconf;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.inject.Singleton;
 
+@Singleton
 public class DevRelza {
     @InjectByType
     private DevRelAnalyzer analyzer;
@@ -12,7 +14,7 @@ public class DevRelza {
 
     @PostConstruct
     public void init() {
-        System.out.println(analyzer);
+        System.out.println("************** "+analyzer);
     }
 
     @Deprecated

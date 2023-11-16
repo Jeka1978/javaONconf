@@ -1,6 +1,7 @@
 package com.epam.javaonconf;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.inject.Singleton;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
@@ -11,6 +12,14 @@ import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import lombok.SneakyThrows;
+
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class ObjectFactory {
@@ -19,9 +28,11 @@ public class ObjectFactory {
     private Config config;
     private List<ObjectConfigurator> objectConfigurators;
     private List<ProxyConfigurator> proxyConfigurators;
+    private Map<Class<?>, Object> singletonInstances = new ConcurrentHashMap<>();
 
     private ObjectFactory() {
-        config = new Config(); // Replace with appropriate configuration setup
+        String basePackageName = System.getProperty("base.package.name", "com.epam");
+        config = new Config(basePackageName); // Replace with appropriate configuration setup
 
         // Initialize the list of ObjectConfigurators
         objectConfigurators = config.getImplementations(ObjectConfigurator.class).stream()
@@ -39,16 +50,30 @@ public class ObjectFactory {
     }
 
     @SneakyThrows
-    public <T> T createObject(Class<? extends T> type) {
+    public <T> T createObject(Class<T> type) {
+        if (singletonInstances.containsKey(type)) {
+            return (T) singletonInstances.get(type);
+        }
+
         Class<? extends T> implClass = type;
         if (type.isInterface()) {
             implClass = config.getImplementation(type);
         }
+
         T t = createInstance(implClass);
+        if (isSingleton(implClass)) {
+            singletonInstances.put(implClass, t);
+        }
+
         configureObject(t);
-        t = wrapWithProxyConfigurators(t, implClass);
         initializePostConstruct(t);
+        t = wrapWithProxyConfigurators(t, implClass);
+
         return t;
+    }
+
+    private boolean isSingleton(Class<?> implClass) {
+        return implClass.isAnnotationPresent(Singleton.class);
     }
 
     @SneakyThrows
@@ -77,6 +102,7 @@ public class ObjectFactory {
         }
     }
 }
+
 
 
 
