@@ -6,8 +6,9 @@ import java.lang.reflect.Field;
 
 public class InjectByTypeAnnotationObjectConfigurator implements ObjectConfigurator {
 
-    @Override
     @SneakyThrows
+    @Override
+    @SuppressWarnings("unchecked")
     public void configure(Object obj) {
         Class<?> implClass = obj.getClass();
         for (Field field : implClass.getDeclaredFields()) {

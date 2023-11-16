@@ -7,6 +7,12 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.SneakyThrows;
+
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class ObjectFactory {
 
     private static final ObjectFactory INSTANCE = new ObjectFactory();
@@ -33,21 +39,16 @@ public class ObjectFactory {
     }
 
     @SneakyThrows
-    public <T> T createObject(Class<T> type) {
-        Class<? extends T> implClass = resolveType(type);
-        T t = createInstance(implClass);
-        configureObject(t);
-        initializePostConstruct(t);
-        t = wrapWithProxyConfigurators(t, implClass);
-        return t;
-    }
-
-    private <T> Class<? extends T> resolveType(Class<T> type) {
+    public <T> T createObject(Class<? extends T> type) {
         Class<? extends T> implClass = type;
         if (type.isInterface()) {
             implClass = config.getImplementation(type);
         }
-        return implClass;
+        T t = createInstance(implClass);
+        configureObject(t);
+        t = wrapWithProxyConfigurators(t, implClass);
+        initializePostConstruct(t);
+        return t;
     }
 
     @SneakyThrows

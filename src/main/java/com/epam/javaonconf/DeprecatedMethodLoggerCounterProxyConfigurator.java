@@ -2,12 +2,10 @@ package com.epam.javaonconf;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.implementation.InvocationHandlerAdapter;
-import net.bytebuddy.matcher.ElementMatchers;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -17,20 +15,11 @@ public class DeprecatedMethodLoggerCounterProxyConfigurator implements ProxyConf
 
     private final Map<Method, Integer> deprecatedMethodUsageCount = new ConcurrentHashMap<>();
 
-    @SneakyThrows
     @SuppressWarnings("unchecked")
     @Override
     public <T> T configureProxy(T object, Class<? extends T> type) {
         if (containsDeprecatedMethods(type)) {
-            return (T) new ByteBuddy()
-                    .subclass(type)
-                    .method(ElementMatchers.any())
-                    .intercept(InvocationHandlerAdapter.of(new DeprecatedMethodInvocationHandler(object)))
-                    .make()
-                    .load(type.getClassLoader())
-                    .getLoaded()
-                    .getDeclaredConstructor()
-                    .newInstance();
+            return (T) Proxy.newProxyInstance(type.getClassLoader(), type.getInterfaces(), new DeprecatedMethodInvocationHandler(object));
         }
         return object;
     }
@@ -49,8 +38,7 @@ public class DeprecatedMethodLoggerCounterProxyConfigurator implements ProxyConf
         }
 
         @Override
-        @SneakyThrows
-        public Object invoke(Object proxy, Method method, Object[] args) {
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             Method actualMethod = findMethodInTargetClass(method, target.getClass());
             if (actualMethod != null && actualMethod.isAnnotationPresent(Deprecated.class)) {
                 deprecatedMethodUsageCount.merge(actualMethod, 1, Integer::sum);
@@ -63,5 +51,7 @@ public class DeprecatedMethodLoggerCounterProxyConfigurator implements ProxyConf
         private Method findMethodInTargetClass(Method proxyMethod, Class<?> targetClass) {
             return targetClass.getMethod(proxyMethod.getName(), proxyMethod.getParameterTypes());
         }
+
     }
 }
+

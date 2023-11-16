@@ -1,3 +1,4 @@
 {
-  "com.epam.javaonconf.MetricsCollector": "com.epam.javaonconf.OptimisticMetricsCollector"
+  "com.epam.javaonconf.MetricsCollector": "com.epam.javaonconf.OptimisticMetricsCollector",
+  "com.epam.javaonconf.DevRelAnalyzer": "com.epam.javaonconf.DevRelAnalyzerImpl"
 }
