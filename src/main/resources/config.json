@@ -1,0 +1,3 @@
+{
+  "com.epam.javaonconf.MetricsCollector": "com.epam.javaonconf.OptimisticMetricsCollector"
+}
